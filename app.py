@@ -44,7 +44,14 @@ app.config['UPLOAD_FOLDER'] = '/tmp/council_uploads'
 # Create upload folder if it doesn't exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-council = LLMCouncil()
+# Lazy initialization of council to avoid crashes on import
+council = None
+
+def get_council():
+    global council
+    if council is None:
+        council = LLMCouncil()
+    return council
 
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'docx', 'png', 'jpg', 'jpeg', 'gif'}
 
@@ -139,7 +146,7 @@ def query():
 
     try:
         # Run the full council session with optional components and conversation history
-        result = asyncio.run(council.full_council_session(full_prompt, include_analysis, include_commentary, conversation_history))
+        result = asyncio.run(get_council().full_council_session(full_prompt, include_analysis, include_commentary, conversation_history))
         # Replace the full prompt with the original user prompt for display
         result['original_prompt'] = original_prompt
         return jsonify(result)
