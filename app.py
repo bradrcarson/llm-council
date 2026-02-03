@@ -85,6 +85,21 @@ def extract_text_from_file(filepath):
     return ""
 
 
+@app.route('/debug-env')
+@requires_auth
+def debug_env():
+    """Debug endpoint to check environment variables"""
+    keys = ['ANTHROPIC_API_KEY', 'GOOGLE_API_KEY', 'OPENAI_API_KEY', 'XAI_API_KEY',
+            'DEEPSEEK_API_KEY', 'OPENROUTER_API_KEY', 'COUNCIL_PASSWORD']
+    status = {}
+    for key in keys:
+        val = os.getenv(key)
+        if val:
+            status[key] = f"SET ({len(val)} chars, starts with {val[:8]}...)"
+        else:
+            status[key] = "NOT SET"
+    return jsonify(status)
+
 @app.route('/')
 @requires_auth
 def index():
