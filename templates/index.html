@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carson Council of LLMs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
+            background: #fafafa;
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: #1d1d1f;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 60px;
+        }
+
+        .header-content {
+            flex: 1;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 64px;
+            font-weight: 700;
+            letter-spacing: -2px;
+            color: #1d1d1f;
+            margin-bottom: 12px;
+        }
+
+        header p {
+            font-size: 21px;
+            font-weight: 400;
+            color: #6e6e73;
+            letter-spacing: -0.2px;
+        }
+
+        .history-button {
+            padding: 12px 24px;
+            background: white;
+            color: #1d1d1f;
+            border: 1.5px solid #d2d2d7;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: -0.2px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .history-button:hover {
+            background: #f5f5f7;
+            border-color: #86868b;
+        }
+
+        .history-panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 400px;
+            height: 100vh;
+            background: white;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .history-panel.open {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        .history-header {
+            padding: 24px;
+            border-bottom: 1px solid #e8e8ed;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-header h2 {
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: -0.6px;
+        }
+
+        .close-history {
+            all: unset;
+            cursor: pointer;
+            font-size: 28px;
+            color: #6e6e73;
+            line-height: 1;
+        }
+
+        .close-history:hover {
+            color: #1d1d1f;
+        }
+
+        .history-list {
+            padding: 12px;
+        }
+
+        .history-item {
+            background: #f5f5f7;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1.5px solid transparent;
+        }
+
+        .history-item:hover {
+            background: #e8e8ed;
+            border-color: #d2d2d7;
+        }
+
+        .history-item-date {
+            font-size: 12px;
+            color: #86868b;
+            margin-bottom: 8px;
+        }
+
+        .history-item-prompt {
+            font-size: 15px;
+            color: #1d1d1f;
+            line-height: 1.4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .history-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.3);
+            z-index: 999;
+        }
+
+        .history-overlay.open {
+            display: block;
+        }
+
+        .query-section {
+            background: white;
+            border-radius: 18px;
+            padding: 40px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+            border: 1px solid #e8e8ed;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .options-group {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 20px;
+            padding: 12px 0;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            color: #1d1d1f;
+            font-weight: 500;
+            user-select: none;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #0071e3;
+        }
+
+        .checkbox-label span {
+            cursor: pointer;
+        }
+
+        .checkbox-label:hover span {
+            color: #0071e3;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #d2d2d7;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            background: #fbfbfd;
+            margin-bottom: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .file-upload-area:hover {
+            border-color: #0071e3;
+            background: #f5f9ff;
+        }
+
+        .file-upload-area.drag-over {
+            border-color: #0071e3;
+            background: #f5f9ff;
+        }
+
+        .file-upload-label {
+            cursor: pointer;
+            color: #6e6e73;
+            font-size: 15px;
+        }
+
+        .file-upload-label strong {
+            color: #0071e3;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .file-list {
+            margin-top: 12px;
+            text-align: left;
+        }
+
+        .file-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: #e8e8ed;
+            border-radius: 6px;
+            margin: 4px;
+            font-size: 14px;
+            color: #1d1d1f;
+        }
+
+        .file-item button {
+            all: unset;
+            cursor: pointer;
+            color: #6e6e73;
+            font-weight: bold;
+            padding: 0 4px;
+        }
+
+        .file-item button:hover {
+            color: #1d1d1f;
+        }
+
+        .copy-button {
+            padding: 8px 16px;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin-bottom: 12px;
+        }
+
+        .copy-button:hover {
+            background: #e8e8ed;
+        }
+
+        .copy-button.copied {
+            background: #0071e3;
+            color: white;
+            border-color: #0071e3;
+        }
+
+        .response-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .response-card h3 {
+            margin-bottom: 0;
+        }
+
+        textarea {
+            flex: 1;
+            padding: 16px 20px;
+            border: 1.5px solid #d2d2d7;
+            border-radius: 12px;
+            font-size: 17px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-weight: 400;
+            resize: vertical;
+            min-height: 120px;
+            transition: all 0.2s ease;
+            background: #fbfbfd;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #0071e3;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+        }
+
+        button {
+            padding: 16px 48px;
+            background: #0071e3;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: -0.2px;
+        }
+
+        button:hover {
+            background: #0077ed;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #d2d2d7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .new-question-btn {
+            flex: 0 0 auto;
+            background: white;
+            color: #1d1d1f;
+            border: 1.5px solid #d2d2d7;
+            padding: 16px 32px;
+        }
+
+        .new-question-btn:hover {
+            background: #f5f5f7;
+            border-color: #86868b;
+            box-shadow: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 60px;
+            color: #6e6e73;
+            font-size: 19px;
+        }
+
+        .spinner {
+            border: 3px solid #e8e8ed;
+            border-top: 3px solid #0071e3;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 24px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+        }
+
+        .section {
+            background: white;
+            border-radius: 18px;
+            padding: 40px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+            border: 1px solid #e8e8ed;
+        }
+
+        .section h2 {
+            color: #1d1d1f;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 28px;
+            letter-spacing: -0.8px;
+        }
+
+        .response-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 24px;
+        }
+
+        @media (max-width: 1400px) {
+            .response-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .response-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .response-card {
+            background: #fbfbfd;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1.5px solid #e8e8ed;
+            transition: all 0.2s ease;
+        }
+
+        .response-card:hover {
+            border-color: #d2d2d7;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        .response-card.claude {
+            border-top: 3px solid #c17a4a;
+        }
+
+        .response-card.gemini {
+            border-top: 3px solid #4285f4;
+        }
+
+        .response-card.gpt {
+            border-top: 3px solid #10a37f;
+        }
+
+        .response-card.grok {
+            border-top: 3px solid #000000;
+        }
+
+        .response-card h3 {
+            margin-bottom: 16px;
+            font-size: 19px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+            color: #1d1d1f;
+        }
+
+        .response-text {
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #1d1d1f;
+            font-size: 15px;
+        }
+
+        .analysis-section {
+            background: #e8f4f8;
+            border: 3px solid #0071e3;
+            border-radius: 12px;
+            padding: 28px;
+            margin-top: 24px;
+        }
+
+        .commentary-card {
+            background: #f5f0ff;
+            border: 3px solid #8e44ad;
+            border-radius: 12px;
+            padding: 28px;
+            margin-bottom: 16px;
+        }
+
+        .commentary-card h3 {
+            color: #1d1d1f;
+            margin-bottom: 0;
+            font-size: 19px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+
+        .commentary-card .response-header {
+            margin-bottom: 16px;
+        }
+
+        .error {
+            background: #fff5f5;
+            border: 1.5px solid #ffcccc;
+            color: #c33;
+            padding: 24px;
+            border-radius: 12px;
+            margin: 24px 0;
+        }
+
+        .prompt-display {
+            background: #f5f5f7;
+            padding: 20px 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            font-style: italic;
+            color: #1d1d1f;
+            font-size: 17px;
+        }
+    </style>
+</head>
+<body>
+    <div class="history-overlay" id="historyOverlay" onclick="closeHistory()"></div>
+
+    <div class="history-panel" id="historyPanel">
+        <div class="history-header">
+            <h2>Previous Searches</h2>
+            <button class="close-history" onclick="closeHistory()">×</button>
+        </div>
+        <div class="history-list" id="historyList"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div style="width: 150px;"></div>
+            <div class="header-content">
+                <h1>Carson Council of LLMs</h1>
+                <p>Claude Sonnet 4.5 · Gemini 2.0 Flash · GPT-5.2 · Grok 4.1 · DeepSeek V3.2 · Kimi K2 · Mistral Large 3 · Qwen 2.5 72B</p>
+            </div>
+            <button class="history-button" onclick="openHistory()">Previous Searches</button>
+        </header>
+
+        <div class="query-section">
+            <div class="file-upload-area" id="fileUploadArea">
+                <input type="file" id="fileInput" multiple accept=".txt,.pdf,.docx,.png,.jpg,.jpeg,.gif">
+                <label for="fileInput" class="file-upload-label">
+                    <strong>Click to upload</strong> or drag and drop<br>
+                    <span style="font-size: 13px; color: #86868b;">PDF, DOCX, TXT, or images (max 16MB)</span>
+                </label>
+                <div class="file-list" id="fileList"></div>
+            </div>
+            <div class="input-group">
+                <textarea
+                    id="promptInput"
+                    placeholder="Enter your question..."
+                ></textarea>
+            </div>
+            <div class="options-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="includeAnalysis" checked>
+                    <span>Analysis of LLM Responses (by Gemini)</span>
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="includeCrossCommentary" checked>
+                    <span>LLMs Evaluate Each Other</span>
+                </label>
+            </div>
+            <div style="display: flex; gap: 16px;">
+                <button id="submitBtn" onclick="submitQuery()" style="flex: 1;">
+                    Submit Query
+                </button>
+                <button id="newQuestionBtn" onclick="newQuestion()" class="new-question-btn">
+                    New Question
+                </button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div>Consulting the council...</div>
+        </div>
+
+        <div class="results" id="results">
+            <div class="section">
+                <h2>Your Question</h2>
+                <div class="prompt-display" id="promptDisplay"></div>
+            </div>
+
+            <div class="section">
+                <h2>Responses</h2>
+                <button class="copy-button" onclick="copyAllResponses(this)" style="margin-bottom: 16px;">Copy All Responses</button>
+                <div class="response-grid">
+                    <div class="response-card claude">
+                        <div class="response-header">
+                            <h3>Claude</h3>
+                            <button class="copy-button" onclick="copyToClipboard('claudeResponse', this)">Copy</button>
+                        </div>
+                        <div class="response-text" id="claudeResponse"></div>
+                    </div>
+                    <div class="response-card gemini">
+                        <div class="response-header">
+                            <h3>Gemini</h3>
+                            <button class="copy-button" onclick="copyToClipboard('geminiResponse', this)">Copy</button>
+                        </div>
+                        <div class="response-text" id="geminiResponse"></div>
+                    </div>
+                    <div class="response-card gpt">
+                        <div class="response-header">
+                            <h3>GPT</h3>
+                            <button class="copy-button" onclick="copyToClipboard('gptResponse', this)">Copy</button>
+                        </div>
+                        <div class="response-text" id="gptResponse"></div>
+                    </div>
+                    <div class="response-card grok">
+                        <div class="response-header">
+                            <h3>Grok</h3>
+                            <button class="copy-button" onclick="copyToClipboard('grokResponse', this)">Copy</button>
+                        </div>
+                        <div class="response-text" id="grokResponse"></div>
+                    </div>
+                    <div class="response-card deepseek">
+                        <div class="response-header">
+                            <h3>DeepSeek</h3>
+                            <button class="copy-button" onclick="copyToClipboard('deepseekResponse', this)">Copy</button>
+                        </div>
+                        <div class="response-text" id="deepseekResponse"></div>
+                    </div>
+                    <div class="response-card kimi">
+                        <div class="response-header">
+                            <h3>Kimi</h3>
+                            <button class="copy-button" onclick="copyToClipboard('kimiResponse', this)">Copy</button>
+                        </div>
+                        <div class="response-text" id="kimiResponse"></div>
+                    </div>
+                    <div class="response-card mistral">
+                        <div class="response-header">
+                            <h3>Mistral</h3>
+                            <button class="copy-button" onclick="copyToClipboard('mistralResponse', this)">Copy</button>
+                        </div>
+                        <div class="response-text" id="mistralResponse"></div>
+                    </div>
+                    <div class="response-card qwen">
+                        <div class="response-header">
+                            <h3>Qwen</h3>
+                            <button class="copy-button" onclick="copyToClipboard('qwenResponse', this)">Copy</button>
+                        </div>
+                        <div class="response-text" id="qwenResponse"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section" id="analysisSection">
+                <h2>Analysis of LLM Responses (by Gemini)</h2>
+                <button class="copy-button" onclick="copyToClipboard('analysis', this)">Copy Analysis</button>
+                <div class="analysis-section">
+                    <div class="response-text" id="analysis"></div>
+                </div>
+            </div>
+
+            <div class="section" id="crossCommentarySection">
+                <h2>Cross-Commentary</h2>
+                <div class="commentary-card">
+                    <div class="response-header">
+                        <h3>Claude on Other Models</h3>
+                        <button class="copy-button" onclick="copyToClipboard('claudeCommentary', this)">Copy</button>
+                    </div>
+                    <div class="response-text" id="claudeCommentary"></div>
+                </div>
+                <div class="commentary-card">
+                    <div class="response-header">
+                        <h3>Gemini on Other Models</h3>
+                        <button class="copy-button" onclick="copyToClipboard('geminiCommentary', this)">Copy</button>
+                    </div>
+                    <div class="response-text" id="geminiCommentary"></div>
+                </div>
+                <div class="commentary-card">
+                    <div class="response-header">
+                        <h3>GPT on Other Models</h3>
+                        <button class="copy-button" onclick="copyToClipboard('gptCommentary', this)">Copy</button>
+                    </div>
+                    <div class="response-text" id="gptCommentary"></div>
+                </div>
+                <div class="commentary-card">
+                    <div class="response-header">
+                        <h3>Grok on Other Models</h3>
+                        <button class="copy-button" onclick="copyToClipboard('grokCommentary', this)">Copy</button>
+                    </div>
+                    <div class="response-text" id="grokCommentary"></div>
+                </div>
+                <div class="commentary-card">
+                    <div class="response-header">
+                        <h3>DeepSeek on Other Models</h3>
+                        <button class="copy-button" onclick="copyToClipboard('deepseekCommentary', this)">Copy</button>
+                    </div>
+                    <div class="response-text" id="deepseekCommentary"></div>
+                </div>
+                <div class="commentary-card">
+                    <div class="response-header">
+                        <h3>Kimi on Other Models</h3>
+                        <button class="copy-button" onclick="copyToClipboard('kimiCommentary', this)">Copy</button>
+                    </div>
+                    <div class="response-text" id="kimiCommentary"></div>
+                </div>
+                <div class="commentary-card">
+                    <div class="response-header">
+                        <h3>Mistral on Other Models</h3>
+                        <button class="copy-button" onclick="copyToClipboard('mistralCommentary', this)">Copy</button>
+                    </div>
+                    <div class="response-text" id="mistralCommentary"></div>
+                </div>
+                <div class="commentary-card">
+                    <div class="response-header">
+                        <h3>Qwen on Other Models</h3>
+                        <button class="copy-button" onclick="copyToClipboard('qwenCommentary', this)">Copy</button>
+                    </div>
+                    <div class="response-text" id="qwenCommentary"></div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Ask Another Question</h2>
+                <div class="file-upload-area" id="fileUploadArea2">
+                    <input type="file" id="fileInput2" multiple accept=".txt,.pdf,.docx,.png,.jpg,.jpeg,.gif">
+                    <label for="fileInput2" class="file-upload-label">
+                        <strong>Click to upload</strong> or drag and drop<br>
+                        <span style="font-size: 13px; color: #86868b;">PDF, DOCX, TXT, or images (max 16MB)</span>
+                    </label>
+                    <div class="file-list" id="fileList2"></div>
+                </div>
+                <div class="input-group">
+                    <textarea
+                        id="promptInput2"
+                        placeholder="Enter your next question..."
+                    ></textarea>
+                </div>
+                <div class="options-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="includeAnalysis2" checked>
+                        <span>Analysis of LLM Responses (by Gemini)</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="includeCrossCommentary2" checked>
+                        <span>LLMs Evaluate Each Other</span>
+                    </label>
+                </div>
+                <div style="display: flex; gap: 16px;">
+                    <button id="submitBtn2" onclick="submitQuery2()" style="flex: 1; background: #0071e3;">
+                        Continue Thread
+                        <div style="font-size: 13px; font-weight: 400; margin-top: 4px; opacity: 0.9;">Models see previous context</div>
+                    </button>
+                    <button id="submitNewBtn2" onclick="submitNewQuery2()" class="new-question-btn" style="flex: 1; padding: 16px 32px;">
+                        New Question
+                        <div style="font-size: 13px; font-weight: 400; margin-top: 4px; opacity: 0.8;">Fresh start</div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFiles = [];
+        let searchHistory = [];
+        let conversationHistory = []; // Track conversation for threading
+        let lastPrompt = ''; // Track last prompt
+        let lastResponses = {}; // Track last responses from all models
+
+        // Load history from localStorage
+        function loadHistory() {
+            const saved = localStorage.getItem('councilHistory');
+            if (saved) {
+                searchHistory = JSON.parse(saved);
+            }
+        }
+
+        // Save history to localStorage
+        function saveHistory() {
+            localStorage.setItem('councilHistory', JSON.stringify(searchHistory));
+        }
+
+        // Add item to history
+        function addToHistory(prompt, result) {
+            const historyItem = {
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                prompt: prompt,
+                result: result
+            };
+            searchHistory.unshift(historyItem);
+            // Keep only last 50 searches
+            if (searchHistory.length > 50) {
+                searchHistory = searchHistory.slice(0, 50);
+            }
+            saveHistory();
+        }
+
+        // Open history panel
+        function openHistory() {
+            document.getElementById('historyPanel').classList.add('open');
+            document.getElementById('historyOverlay').classList.add('open');
+            renderHistory();
+        }
+
+        // Close history panel
+        function closeHistory() {
+            document.getElementById('historyPanel').classList.remove('open');
+            document.getElementById('historyOverlay').classList.remove('open');
+        }
+
+        // Render history list
+        function renderHistory() {
+            const historyList = document.getElementById('historyList');
+            if (searchHistory.length === 0) {
+                historyList.innerHTML = '<div style="padding: 24px; text-align: center; color: #86868b;">No previous searches</div>';
+                return;
+            }
+
+            historyList.innerHTML = searchHistory.map(item => {
+                const date = new Date(item.timestamp);
+                const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                return `
+                    <div class="history-item" onclick="loadHistoryItem(${item.id})">
+                        <div class="history-item-date">${formattedDate}</div>
+                        <div class="history-item-prompt">${item.prompt}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Load a history item
+        function loadHistoryItem(id) {
+            const item = searchHistory.find(h => h.id === id);
+            if (!item) return;
+
+            // Display the results
+            document.getElementById('promptDisplay').textContent = item.result.original_prompt;
+            document.getElementById('claudeResponse').textContent = item.result.responses.claude;
+            document.getElementById('geminiResponse').textContent = item.result.responses.gemini;
+            document.getElementById('gptResponse').textContent = item.result.responses.gpt;
+            document.getElementById('grokResponse').textContent = item.result.responses.grok;
+            document.getElementById('deepseekResponse').textContent = item.result.responses.deepseek || '';
+            document.getElementById('kimiResponse').textContent = item.result.responses.kimi || '';
+            document.getElementById('mistralResponse').textContent = item.result.responses.mistral || '';
+            document.getElementById('qwenResponse').textContent = item.result.responses.qwen || '';
+
+            // Show/hide and populate analysis section
+            if (item.result.analysis) {
+                document.getElementById('analysis').textContent = item.result.analysis;
+                document.getElementById('analysisSection').style.display = 'block';
+            } else {
+                document.getElementById('analysisSection').style.display = 'none';
+            }
+
+            // Show/hide and populate cross-commentary section
+            if (item.result.commentaries) {
+                document.getElementById('claudeCommentary').textContent = item.result.commentaries.claude_commentary;
+                document.getElementById('geminiCommentary').textContent = item.result.commentaries.gemini_commentary;
+                document.getElementById('gptCommentary').textContent = item.result.commentaries.gpt_commentary;
+                document.getElementById('grokCommentary').textContent = item.result.commentaries.grok_commentary;
+                document.getElementById('deepseekCommentary').textContent = item.result.commentaries.deepseek_commentary || '';
+                document.getElementById('kimiCommentary').textContent = item.result.commentaries.kimi_commentary || '';
+                document.getElementById('mistralCommentary').textContent = item.result.commentaries.mistral_commentary || '';
+                document.getElementById('qwenCommentary').textContent = item.result.commentaries.qwen_commentary || '';
+                document.getElementById('crossCommentarySection').style.display = 'block';
+            } else {
+                document.getElementById('crossCommentarySection').style.display = 'none';
+            }
+
+            // Show results
+            document.getElementById('results').style.display = 'block';
+
+            // Close history panel
+            closeHistory();
+
+            // Scroll to results
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Copy to clipboard function
+        function copyToClipboard(elementId, button) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                button.classList.add('copied');
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy to clipboard');
+            });
+        }
+
+        // Copy all responses function
+        function copyAllResponses(button) {
+            const prompt = document.getElementById('promptDisplay').textContent;
+            const models = [
+                { name: 'Claude', id: 'claudeResponse' },
+                { name: 'Gemini', id: 'geminiResponse' },
+                { name: 'GPT', id: 'gptResponse' },
+                { name: 'Grok', id: 'grokResponse' },
+                { name: 'DeepSeek', id: 'deepseekResponse' },
+                { name: 'Kimi', id: 'kimiResponse' },
+                { name: 'Mistral', id: 'mistralResponse' },
+                { name: 'Qwen', id: 'qwenResponse' }
+            ];
+
+            let allText = `Question: ${prompt}\n\n`;
+            allText += '='.repeat(60) + '\n\n';
+
+            models.forEach(model => {
+                const response = document.getElementById(model.id).textContent;
+                allText += `${model.name.toUpperCase()}:\n${response}\n\n`;
+                allText += '-'.repeat(40) + '\n\n';
+            });
+
+            navigator.clipboard.writeText(allText).then(() => {
+                const originalText = button.textContent;
+                button.textContent = 'Copied All!';
+                button.classList.add('copied');
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy to clipboard');
+            });
+        }
+
+        // Load history on page load
+        loadHistory();
+
+        // File input handling
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const fileUploadArea = document.getElementById('fileUploadArea');
+
+        fileInput.addEventListener('change', function(e) {
+            handleFiles(e.target.files);
+        });
+
+        // Drag and drop
+        fileUploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            fileUploadArea.classList.add('drag-over');
+        });
+
+        fileUploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            fileUploadArea.classList.remove('drag-over');
+        });
+
+        fileUploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            fileUploadArea.classList.remove('drag-over');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        function handleFiles(files) {
+            for (let file of files) {
+                if (!selectedFiles.some(f => f.name === file.name)) {
+                    selectedFiles.push(file);
+                }
+            }
+            updateFileList();
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            updateFileList();
+        }
+
+        function updateFileList() {
+            if (selectedFiles.length === 0) {
+                fileList.innerHTML = '';
+                return;
+            }
+
+            fileList.innerHTML = selectedFiles.map((file, index) => `
+                <div class="file-item">
+                    ${file.name}
+                    <button onclick="removeFile(${index})">×</button>
+                </div>
+            `).join('');
+        }
+
+        async function submitQuery(useConversationHistory = false) {
+            const prompt = document.getElementById('promptInput').value.trim();
+            const includeAnalysis = document.getElementById('includeAnalysis').checked;
+            const includeCrossCommentary = document.getElementById('includeCrossCommentary').checked;
+
+            if (!prompt && selectedFiles.length === 0) {
+                alert('Please enter a question or upload documents');
+                return;
+            }
+
+            // Show loading, hide results
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('submitBtn').disabled = true;
+
+            try {
+                let response;
+                const historyToSend = useConversationHistory ? conversationHistory : null;
+
+                if (selectedFiles.length > 0) {
+                    // Use FormData for file uploads
+                    const formData = new FormData();
+                    formData.append('prompt', prompt);
+                    formData.append('includeAnalysis', includeAnalysis);
+                    formData.append('includeCrossCommentary', includeCrossCommentary);
+                    if (historyToSend && historyToSend.length > 0) {
+                        formData.append('conversationHistory', JSON.stringify(historyToSend));
+                    }
+                    selectedFiles.forEach(file => {
+                        formData.append('documents', file);
+                    });
+
+                    response = await fetch('/query', {
+                        method: 'POST',
+                        body: formData
+                    });
+                } else {
+                    // Regular JSON request
+                    response = await fetch('/query', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            prompt: prompt,
+                            includeAnalysis: includeAnalysis,
+                            includeCrossCommentary: includeCrossCommentary,
+                            conversationHistory: historyToSend
+                        })
+                    });
+                }
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Display results
+                document.getElementById('promptDisplay').textContent = data.original_prompt;
+                document.getElementById('claudeResponse').textContent = data.responses.claude;
+                document.getElementById('geminiResponse').textContent = data.responses.gemini;
+                document.getElementById('gptResponse').textContent = data.responses.gpt;
+                document.getElementById('grokResponse').textContent = data.responses.grok;
+                document.getElementById('deepseekResponse').textContent = data.responses.deepseek;
+                document.getElementById('kimiResponse').textContent = data.responses.kimi;
+                document.getElementById('mistralResponse').textContent = data.responses.mistral;
+                document.getElementById('qwenResponse').textContent = data.responses.qwen;
+
+                // Show/hide and populate analysis section
+                if (data.analysis) {
+                    document.getElementById('analysis').textContent = data.analysis;
+                    document.getElementById('analysisSection').style.display = 'block';
+                } else {
+                    document.getElementById('analysisSection').style.display = 'none';
+                }
+
+                // Show/hide and populate cross-commentary section
+                if (data.commentaries) {
+                    document.getElementById('claudeCommentary').textContent = data.commentaries.claude_commentary;
+                    document.getElementById('geminiCommentary').textContent = data.commentaries.gemini_commentary;
+                    document.getElementById('gptCommentary').textContent = data.commentaries.gpt_commentary;
+                    document.getElementById('grokCommentary').textContent = data.commentaries.grok_commentary;
+                    document.getElementById('deepseekCommentary').textContent = data.commentaries.deepseek_commentary;
+                    document.getElementById('kimiCommentary').textContent = data.commentaries.kimi_commentary;
+                    document.getElementById('mistralCommentary').textContent = data.commentaries.mistral_commentary;
+                    document.getElementById('qwenCommentary').textContent = data.commentaries.qwen_commentary;
+                    document.getElementById('crossCommentarySection').style.display = 'block';
+                } else {
+                    document.getElementById('crossCommentarySection').style.display = 'none';
+                }
+
+                // Update conversation history for threading
+                // Add user prompt
+                conversationHistory.push({ role: 'user', content: prompt });
+                // Add assistant response (we'll use Claude's response as the canonical one)
+                conversationHistory.push({ role: 'assistant', content: data.responses.claude });
+
+                // Save current state
+                lastPrompt = prompt;
+                lastResponses = data.responses;
+
+                // Save to history
+                addToHistory(prompt, data);
+
+                // Show results, hide loading
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('results').style.display = 'block';
+
+                // Clear files after successful submission
+                selectedFiles = [];
+                updateFileList();
+                fileInput.value = '';
+
+                // Scroll to results
+                document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                alert('Error: ' + error.message);
+            } finally {
+                document.getElementById('submitBtn').disabled = false;
+            }
+        }
+
+        // Allow Enter key to submit (with Shift+Enter for newlines)
+        document.getElementById('promptInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                submitQuery();
+            }
+        });
+
+        // New Question button - clears form, conversation history, and hides results
+        function newQuestion() {
+            // Clear the prompt input
+            document.getElementById('promptInput').value = '';
+
+            // Clear uploaded files
+            selectedFiles = [];
+            updateFileList();
+            fileInput.value = '';
+
+            // Reset checkboxes to default (checked)
+            document.getElementById('includeAnalysis').checked = true;
+            document.getElementById('includeCrossCommentary').checked = true;
+
+            // Clear conversation history (fresh start)
+            conversationHistory = [];
+            lastPrompt = '';
+            lastResponses = {};
+
+            // Hide results if they're showing
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('loading').style.display = 'none';
+
+            // Scroll to top of query section
+            document.querySelector('.query-section').scrollIntoView({ behavior: 'smooth' });
+
+            // Focus on the prompt input
+            document.getElementById('promptInput').focus();
+        }
+
+        // Second query box functionality
+        let selectedFiles2 = [];
+        const fileInput2 = document.getElementById('fileInput2');
+        const fileList2 = document.getElementById('fileList2');
+        const fileUploadArea2 = document.getElementById('fileUploadArea2');
+
+        fileInput2.addEventListener('change', function(e) {
+            handleFiles2(e.target.files);
+        });
+
+        fileUploadArea2.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            fileUploadArea2.classList.add('drag-over');
+        });
+
+        fileUploadArea2.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            fileUploadArea2.classList.remove('drag-over');
+        });
+
+        fileUploadArea2.addEventListener('drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            fileUploadArea2.classList.remove('drag-over');
+            handleFiles2(e.dataTransfer.files);
+        });
+
+        function handleFiles2(files) {
+            for (let file of files) {
+                if (!selectedFiles2.some(f => f.name === file.name)) {
+                    selectedFiles2.push(file);
+                }
+            }
+            updateFileList2();
+        }
+
+        function removeFile2(index) {
+            selectedFiles2.splice(index, 1);
+            updateFileList2();
+        }
+
+        function updateFileList2() {
+            if (selectedFiles2.length === 0) {
+                fileList2.innerHTML = '';
+                return;
+            }
+
+            fileList2.innerHTML = selectedFiles2.map((file, index) => `
+                <div class="file-item">
+                    ${file.name}
+                    <button onclick="removeFile2(${index})">×</button>
+                </div>
+            `).join('');
+        }
+
+        async function submitQuery2() {
+            const prompt = document.getElementById('promptInput2').value.trim();
+
+            if (!prompt && selectedFiles2.length === 0) {
+                alert('Please enter a question or upload documents');
+                return;
+            }
+
+            // Copy checkbox states from second form to first form
+            document.getElementById('includeAnalysis').checked = document.getElementById('includeAnalysis2').checked;
+            document.getElementById('includeCrossCommentary').checked = document.getElementById('includeCrossCommentary2').checked;
+
+            // Reuse the same submit logic
+            document.getElementById('promptInput').value = prompt;
+            selectedFiles = [...selectedFiles2];
+            updateFileList();
+
+            // Clear second form
+            document.getElementById('promptInput2').value = '';
+            selectedFiles2 = [];
+            updateFileList2();
+            fileInput2.value = '';
+
+            // Submit WITH conversation history (continue thread)
+            await submitQuery(true);
+        }
+
+        async function submitNewQuery2() {
+            const prompt = document.getElementById('promptInput2').value.trim();
+
+            if (!prompt && selectedFiles2.length === 0) {
+                alert('Please enter a question or upload documents');
+                return;
+            }
+
+            // Clear conversation history (fresh start)
+            conversationHistory = [];
+            lastPrompt = '';
+            lastResponses = {};
+
+            // Clear everything first (fresh start)
+            document.getElementById('promptInput').value = '';
+            selectedFiles = [];
+            updateFileList();
+            fileInput.value = '';
+
+            // Copy values to main form
+            document.getElementById('promptInput').value = prompt;
+            document.getElementById('includeAnalysis').checked = document.getElementById('includeAnalysis2').checked;
+            document.getElementById('includeCrossCommentary').checked = document.getElementById('includeCrossCommentary2').checked;
+            selectedFiles = [...selectedFiles2];
+            updateFileList();
+
+            // Clear second form
+            document.getElementById('promptInput2').value = '';
+            selectedFiles2 = [];
+            updateFileList2();
+            fileInput2.value = '';
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Wait a moment for scroll, then submit WITHOUT history (fresh start)
+            setTimeout(async () => {
+                await submitQuery(false);
+            }, 300);
+        }
+
+        document.getElementById('promptInput2').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                submitQuery2();
+            }
+        });
+    </script>
+</body>
+</html>
