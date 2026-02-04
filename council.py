@@ -184,7 +184,11 @@ class LLMCouncil:
                 messages=messages,
                 max_tokens=4096
             )
-            return response.choices[0].message.content or "(No response from Qwen)"
+            if response and response.choices and len(response.choices) > 0:
+                msg = response.choices[0].message
+                if msg and msg.content:
+                    return msg.content
+            return "(No response from Qwen)"
         except Exception as e:
             return f"Error querying Qwen: {str(e)}"
 
