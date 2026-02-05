@@ -1178,18 +1178,18 @@
                     });
                 }
 
-                if (!response.ok) {
-                    // Server returned an error (timeout, 502, etc.)
-                    const text = await response.text();
-                    try {
-                        const errData = JSON.parse(text);
-                        throw new Error(errData.error || `Server error (${response.status})`);
-                    } catch (parseErr) {
-                        throw new Error(`Server error (${response.status}). The request may have timed out — try disabling Analysis and Cross-Commentary for faster results.`);
-                    }
+                // Parse the response - handle non-JSON responses gracefully
+                const responseText = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (parseErr) {
+                    throw new Error('Server returned an invalid response. The request likely timed out. Try disabling Analysis and Cross-Commentary for faster results.');
                 }
 
-                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || 'Server error (' + response.status + ')');
+                }
 
                 if (data.error) {
                     throw new Error(data.error);
