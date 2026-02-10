@@ -18,8 +18,8 @@ class LLMCouncil:
     def __init__(self):
         # Initialize API clients
         self.anthropic_client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-        # OLMo via OpenRouter (OpenAI-compatible)
-        self.olmo_client = OpenAI(
+        # Llama via OpenRouter (OpenAI-compatible)
+        self.llama_client = OpenAI(
             api_key=os.getenv("OPENROUTER_API_KEY"),
             base_url="https://openrouter.ai/api/v1"
         )
@@ -67,22 +67,22 @@ class LLMCouncil:
         except Exception as e:
             return f"Error querying Claude: {str(e)}"
 
-    def query_olmo(self, prompt: str, conversation_history: List[Dict] = None) -> str:
-        """Query OLMo API via OpenRouter with optional conversation history"""
+    def query_llama(self, prompt: str, conversation_history: List[Dict] = None) -> str:
+        """Query Llama API via OpenRouter with optional conversation history"""
         try:
             messages = []
             if conversation_history:
                 messages.extend(conversation_history)
             messages.append({"role": "user", "content": prompt})
 
-            response = self.olmo_client.chat.completions.create(
-                model="allenai/olmo-2-0325-32b-instruct",
+            response = self.llama_client.chat.completions.create(
+                model="meta-llama/llama-3.1-70b-instruct",
                 messages=messages,
                 max_tokens=4096
             )
-            return response.choices[0].message.content or "(No response from OLMo)"
+            return response.choices[0].message.content or "(No response from Llama)"
         except Exception as e:
-            return f"Error querying OLMo: {str(e)}"
+            return f"Error querying Llama: {str(e)}"
 
     def query_gpt(self, prompt: str, conversation_history: List[Dict] = None) -> str:
         """Query GPT API with optional conversation history"""
@@ -197,7 +197,7 @@ class LLMCouncil:
         # Run all queries concurrently
         tasks = [
             loop.run_in_executor(None, self.query_claude, prompt, conversation_history),
-            loop.run_in_executor(None, self.query_olmo, prompt, conversation_history),
+            loop.run_in_executor(None, self.query_llama, prompt, conversation_history),
             loop.run_in_executor(None, self.query_gpt, prompt, conversation_history),
             loop.run_in_executor(None, self.query_grok, prompt, conversation_history),
             loop.run_in_executor(None, self.query_deepseek, prompt, conversation_history),
@@ -210,7 +210,7 @@ class LLMCouncil:
 
         return {
             "claude": results[0],
-            "olmo": results[1],
+            "llama": results[1],
             "gpt": results[2],
             "grok": results[3],
             "deepseek": results[4],
@@ -221,13 +221,13 @@ class LLMCouncil:
 
     def analyze_responses(self, responses: Dict[str, str]) -> str:
         """Use Claude to analyze agreements and disagreements"""
-        analysis_prompt = f"""You are analyzing responses from eight different AI models (Claude, OLMo, GPT, Grok, DeepSeek, Kimi, Mistral, and Qwen) to the same question.
+        analysis_prompt = f"""You are analyzing responses from eight different AI models (Claude, Llama, GPT, Grok, DeepSeek, Kimi, Mistral, and Qwen) to the same question.
 
 CLAUDE's response:
 {responses['claude']}
 
-OLMO's response:
-{responses['olmo']}
+LLAMA's response:
+{responses['llama']}
 
 GPT's response:
 {responses['gpt']}
@@ -263,7 +263,7 @@ Be objective and thorough in your analysis."""
 
         # Build responses text for each model to review (excluding itself)
         def get_others_responses(exclude: str) -> str:
-            models = ['claude', 'olmo', 'gpt', 'grok', 'deepseek', 'kimi', 'mistral', 'qwen']
+            models = ['claude', 'llama', 'gpt', 'grok', 'deepseek', 'kimi', 'mistral', 'qwen']
             others = [m for m in models if m != exclude]
             return '\n\n'.join([f"{m.upper()}'s response:\n{responses[m]}" for m in others])
 
@@ -275,13 +275,13 @@ Be objective and thorough in your analysis."""
 Please provide your thoughts on their responses. What do they get right? Where might they be mistaken or incomplete? What would you add or clarify?"""
         commentaries['claude_commentary'] = self.query_claude(claude_prompt)
 
-        # OLMo comments on the others
-        olmo_prompt = f"""You are OLMo. Review these responses from the other AI models to the same question:
+        # Llama comments on the others
+        llama_prompt = f"""You are Llama. Review these responses from the other AI models to the same question:
 
-{get_others_responses('olmo')}
+{get_others_responses('llama')}
 
 Please provide your thoughts on their responses. What do they get right? Where might they be mistaken or incomplete? What would you add or clarify?"""
-        commentaries['olmo_commentary'] = self.query_olmo(olmo_prompt)
+        commentaries['llama_commentary'] = self.query_llama(llama_prompt)
 
         # GPT comments on the others
         gpt_prompt = f"""You are GPT. Review these responses from the other AI models to the same question:
