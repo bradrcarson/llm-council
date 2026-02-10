@@ -222,7 +222,7 @@ class LLMCouncil:
         }
 
     def analyze_responses(self, responses: Dict[str, str]) -> str:
-        """Use Gemini to analyze agreements and disagreements"""
+        """Use Claude to analyze agreements and disagreements"""
         analysis_prompt = f"""You are analyzing responses from eight different AI models (Claude, Gemini, GPT, Grok, DeepSeek, Kimi, Mistral, and Qwen) to the same question.
 
 CLAUDE's response:
@@ -257,7 +257,7 @@ Please provide a detailed analysis covering:
 
 Be objective and thorough in your analysis."""
 
-        return self.query_gemini(analysis_prompt)
+        return self.query_claude(analysis_prompt)
 
     def generate_cross_commentary(self, responses: Dict[str, str]) -> Dict[str, str]:
         """Generate prompts for each AI to comment on the others"""
