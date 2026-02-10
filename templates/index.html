@@ -468,8 +468,8 @@
             border-top: 3px solid #c17a4a;
         }
 
-        .response-card.gemini {
-            border-top: 3px solid #4285f4;
+        .response-card.olmo {
+            border-top: 3px solid #8B5CF6;
         }
 
         .response-card.gpt {
@@ -672,7 +672,7 @@
             <div style="width: 150px;"></div>
             <div class="header-content">
                 <h1>Carson Council of LLMs</h1>
-                <p>Claude Sonnet 4.5 · Gemini 2.0 Flash · GPT-5.2 · Grok 4.1 · DeepSeek V3.2 · Kimi K2 · Mistral Large 3 · Qwen 2.5 72B</p>
+                <p>Claude Sonnet 4.5 · OLMo 2 32B · GPT-5.2 · Grok 4.1 · DeepSeek V3.2 · Kimi K2 · Mistral Large 3 · Qwen 2.5 72B</p>
             </div>
             <button class="history-button" onclick="openHistory()">Previous Searches</button>
         </header>
@@ -695,7 +695,7 @@
             <div class="options-group">
                 <label class="checkbox-label">
                     <input type="checkbox" id="includeAnalysis" checked>
-                    <span>Analysis of LLM Responses (by Gemini)</span>
+                    <span>Analysis of LLM Responses (by Claude)</span>
                 </label>
                 <label class="checkbox-label">
                     <input type="checkbox" id="includeCrossCommentary" checked>
@@ -734,12 +734,12 @@
                         </div>
                         <div class="response-text" id="claudeResponse"></div>
                     </div>
-                    <div class="response-card gemini">
+                    <div class="response-card olmo">
                         <div class="response-header">
-                            <h3>Gemini</h3>
-                            <button class="copy-button" onclick="copyToClipboard('geminiResponse', this)">Copy</button>
+                            <h3>OLMo</h3>
+                            <button class="copy-button" onclick="copyToClipboard('olmoResponse', this)">Copy</button>
                         </div>
-                        <div class="response-text" id="geminiResponse"></div>
+                        <div class="response-text" id="olmoResponse"></div>
                     </div>
                     <div class="response-card gpt">
                         <div class="response-header">
@@ -787,7 +787,7 @@
             </div>
 
             <div class="section" id="analysisSection">
-                <h2>Analysis of LLM Responses (by Gemini)</h2>
+                <h2>Analysis of LLM Responses (by Claude)</h2>
                 <button class="copy-button" onclick="copyToClipboard('analysis', this)">Copy Analysis</button>
                 <div class="analysis-section">
                     <div class="response-text" id="analysis"></div>
@@ -805,10 +805,10 @@
                 </div>
                 <div class="commentary-card">
                     <div class="response-header">
-                        <h3>Gemini on Other Models</h3>
-                        <button class="copy-button" onclick="copyToClipboard('geminiCommentary', this)">Copy</button>
+                        <h3>OLMo on Other Models</h3>
+                        <button class="copy-button" onclick="copyToClipboard('olmoCommentary', this)">Copy</button>
                     </div>
-                    <div class="response-text" id="geminiCommentary"></div>
+                    <div class="response-text" id="olmoCommentary"></div>
                 </div>
                 <div class="commentary-card">
                     <div class="response-header">
@@ -873,7 +873,7 @@
                 <div class="options-group">
                     <label class="checkbox-label">
                         <input type="checkbox" id="includeAnalysis2" checked>
-                        <span>Analysis of LLM Responses (by Gemini)</span>
+                        <span>Analysis of LLM Responses (by Claude)</span>
                     </label>
                     <label class="checkbox-label">
                         <input type="checkbox" id="includeCrossCommentary2" checked>
@@ -971,7 +971,7 @@
             // Display the results
             document.getElementById('promptDisplay').textContent = item.result.original_prompt;
             document.getElementById('claudeResponse').textContent = item.result.responses.claude;
-            document.getElementById('geminiResponse').textContent = item.result.responses.gemini;
+            document.getElementById('olmoResponse').textContent = item.result.responses.olmo;
             document.getElementById('gptResponse').textContent = item.result.responses.gpt;
             document.getElementById('grokResponse').textContent = item.result.responses.grok;
             document.getElementById('deepseekResponse').textContent = item.result.responses.deepseek || '';
@@ -990,7 +990,7 @@
             // Show/hide and populate cross-commentary section
             if (item.result.commentaries) {
                 document.getElementById('claudeCommentary').textContent = item.result.commentaries.claude_commentary;
-                document.getElementById('geminiCommentary').textContent = item.result.commentaries.gemini_commentary;
+                document.getElementById('olmoCommentary').textContent = item.result.commentaries.olmo_commentary;
                 document.getElementById('gptCommentary').textContent = item.result.commentaries.gpt_commentary;
                 document.getElementById('grokCommentary').textContent = item.result.commentaries.grok_commentary;
                 document.getElementById('deepseekCommentary').textContent = item.result.commentaries.deepseek_commentary || '';
@@ -1034,7 +1034,7 @@
             const prompt = document.getElementById('promptDisplay').textContent;
             const models = [
                 { name: 'Claude', id: 'claudeResponse' },
-                { name: 'Gemini', id: 'geminiResponse' },
+                { name: 'OLMo', id: 'olmoResponse' },
                 { name: 'GPT', id: 'gptResponse' },
                 { name: 'Grok', id: 'grokResponse' },
                 { name: 'DeepSeek', id: 'deepseekResponse' },
@@ -1198,7 +1198,7 @@
                 // Display results
                 document.getElementById('promptDisplay').textContent = data.original_prompt;
                 document.getElementById('claudeResponse').textContent = data.responses.claude;
-                document.getElementById('geminiResponse').textContent = data.responses.gemini;
+                document.getElementById('olmoResponse').textContent = data.responses.olmo;
                 document.getElementById('gptResponse').textContent = data.responses.gpt;
                 document.getElementById('grokResponse').textContent = data.responses.grok;
                 document.getElementById('deepseekResponse').textContent = data.responses.deepseek;
@@ -1217,7 +1217,7 @@
                 // Show/hide and populate cross-commentary section
                 if (data.commentaries) {
                     document.getElementById('claudeCommentary').textContent = data.commentaries.claude_commentary;
-                    document.getElementById('geminiCommentary').textContent = data.commentaries.gemini_commentary;
+                    document.getElementById('olmoCommentary').textContent = data.commentaries.olmo_commentary;
                     document.getElementById('gptCommentary').textContent = data.commentaries.gpt_commentary;
                     document.getElementById('grokCommentary').textContent = data.commentaries.grok_commentary;
                     document.getElementById('deepseekCommentary').textContent = data.commentaries.deepseek_commentary;
