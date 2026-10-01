@@ -18,6 +18,12 @@ class LLMCouncil:
     def __init__(self):
         # Initialize API clients
         self.anthropic_client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        # Shared OpenRouter client, used as a fallback for any model whose
+        # direct API key is not set (so OPENROUTER_API_KEY alone runs the council)
+        self.openrouter_client = OpenAI(
+            api_key=os.getenv("OPENROUTER_API_KEY"),
+            base_url="https://openrouter.ai/api/v1"
+        )
         # Llama via OpenRouter (OpenAI-compatible)
         self.llama_client = OpenAI(
             api_key=os.getenv("OPENROUTER_API_KEY"),
@@ -52,6 +58,8 @@ class LLMCouncil:
 
     def query_claude(self, prompt: str, conversation_history: List[Dict] = None) -> str:
         """Query Claude API with optional conversation history"""
+        if not os.getenv("ANTHROPIC_API_KEY"):
+            return self._query_openrouter("anthropic/claude-sonnet-4.5", "Claude", prompt, conversation_history)
         try:
             messages = []
             if conversation_history:
@@ -66,6 +74,23 @@ class LLMCouncil:
             return message.content[0].text
         except Exception as e:
             return f"Error querying Claude: {str(e)}"
+
+    def _query_openrouter(self, model: str, name: str, prompt: str, conversation_history: List[Dict] = None) -> str:
+        """Query a model through OpenRouter (fallback when its direct key is missing)"""
+        try:
+            messages = []
+            if conversation_history:
+                messages.extend(conversation_history)
+            messages.append({"role": "user", "content": prompt})
+
+            response = self.openrouter_client.chat.completions.create(
+                model=model,
+                messages=messages,
+                max_tokens=4096
+            )
+            return response.choices[0].message.content or f"(No response from {name})"
+        except Exception as e:
+            return f"Error querying {name}: {str(e)}"
 
     def query_llama(self, prompt: str, conversation_history: List[Dict] = None) -> str:
         """Query Llama API via OpenRouter with optional conversation history"""
@@ -86,6 +111,8 @@ class LLMCouncil:
 
     def query_gpt(self, prompt: str, conversation_history: List[Dict] = None) -> str:
         """Query GPT API with optional conversation history"""
+        if not os.getenv("OPENAI_API_KEY"):
+            return self._query_openrouter("openai/gpt-5.2", "GPT", prompt, conversation_history)
         try:
             messages = []
             if conversation_history:
@@ -103,6 +130,8 @@ class LLMCouncil:
 
     def query_grok(self, prompt: str, conversation_history: List[Dict] = None) -> str:
         """Query Grok API with optional conversation history"""
+        if not os.getenv("XAI_API_KEY"):
+            return self._query_openrouter("x-ai/grok-4.3", "Grok", prompt, conversation_history)
         try:
             messages = []
             if conversation_history:
@@ -120,6 +149,8 @@ class LLMCouncil:
 
     def query_deepseek(self, prompt: str, conversation_history: List[Dict] = None) -> str:
         """Query DeepSeek API with optional conversation history"""
+        if not os.getenv("DEEPSEEK_API_KEY"):
+            return self._query_openrouter("deepseek/deepseek-v3.2", "DeepSeek", prompt, conversation_history)
         try:
             messages = []
             if conversation_history:
